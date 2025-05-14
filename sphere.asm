@@ -217,7 +217,8 @@ GETDISTANCE ; get distance from R3,4,5 to 0,0,0 into R6
 ; TOTAL ;;;;;;;;;;;;;;;;;
     ADD R6, R3, R4      ; add R3, and R4
     ADD R6, R6, R5      ; add R5. R6 is now total distance
-    ADD R6, R6, RADIUS  ; reduce by RADIUS to avoid clipping
+    LD R3, RADIUS       ; load RADIUS
+    ADD R6, R6, R3      ; reduce by RADIUS to avoid clipping
 
     RET
 
