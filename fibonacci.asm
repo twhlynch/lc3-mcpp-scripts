@@ -1,54 +1,56 @@
-; place blocks in the fibonacci sequence
+; fibbonacci
+; R0: loop i
+; R1, R2, R3: fib(n) calculation
 
 .ORIG x3000
 
-; MARK: main
-GETP            ; R0, R1, R2 = X, Y, Z
-ADD R1, R1, #-3 ; move down 3
+;MARK: main
 
-ADD R3, R0, #0  ; origin
-LD R4, ZERO     ; last
-LD R5, ONE      ; value
-LD R6, ZERO     ; count
-LD R7, ZERO     ; comparison
+; setup
+LD  R0  N       ; R0 = N
 
-START
+AND R1  R1  #0  ; R1 = 0 (fib(0))
+ADD R2  R1  #1  ; R2 = 1 (fib(1))
 
-    BR SKIP                 ; jump over EVEN and ODD
+AND R3  R0  #-1     ; if negative
+BRzp NOT_NEGATIVE
+    NOT R3  R3      ; make positive
+    ADD R0  R3  #1
 
-    EVEN
-        ADD R0, R3, R5      ; add value and origin into x
-        ADD R4, R4, R5      ; add value and last into last
-        BR DONE
+NOT_NEGATIVE
 
-    ODD
-        ADD R0, R3, R4      ; add last and origin into x
-        ADD R5, R5, R4      ; add last and value into value
-        BR DONE
+; MARK: fib
 
-    SKIP
-        AND R7, R6, #1      ; check if count is odd or even to alternate
-        BRz EVEN
-        BRp ODD
+ADD R0  R0  #-1 ; i-- (already handled fib(1))
+BRz DONE        ; N was 1, R2 is 1
+BRn OVERFLOW    ; N was 0, R1 is 0
 
-    DONE
-        ADD R7, R3, #0      ; save R3 into R7
+LOOP            ; while i > 0
+    ADD R3  R1  R2  ; R3 = R1 + R2 (fib(n) = fib(n - 1) + fib(n - 2))
+    BRn OVERFLOW    ; break on overflow
+    ADD R1  R2  #0  ; R1 = old fib(n - 1)
+    ADD R2  R3  #0  ; R2 = fib(n)
 
-        LD R3, ONE          ; load 1 (stone)
-        SETB                ; place block
+    ADD R0  R0  #-1 ; i--
+    BRp LOOP        ; until R0 == 0
 
-        ADD R3, R7, #0      ; load R3 from R7
+BR DONE
 
-        ADD R6, R6, #1      ; add 1 to count
+; cleanup
+OVERFLOW            ; used for overflow AND 0 base case
+    ADD R2  R1  #0  ; return R1 (the last non overflow fib)
 
-        ADD R7, R6, #-15    ; stop at 15
+DONE ; R2 holds fib(N)
 
-BRnp START
+ST  R2  RESULT  ; Store result
+
+REG
 
 HALT
 
 ; MARK: labels
-ZERO .FILL #0
-ONE  .FILL #1
+
+N       .FILL   #24
+RESULT  .FILL   #-1
 
 .END
